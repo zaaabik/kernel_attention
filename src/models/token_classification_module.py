@@ -40,9 +40,9 @@ class TokenClassificationModule(LightningModule):
         self.criterion = torch.nn.CrossEntropyLoss()
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes)
-        self.val_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes)
-        self.test_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes)
+        self.train_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
+        self.val_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
+        self.test_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
