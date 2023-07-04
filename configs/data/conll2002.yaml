@@ -1,5 +1,5 @@
 _target_: src.data.conll2002_datamodule.CoNLL2002DataModule
-batch_size: 2
+batch_size: 64
 num_workers: 2
 pin_memory: False
 max_seq_length: 128
