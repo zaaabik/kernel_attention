@@ -3,3 +3,4 @@ defaults:
 
 accelerator: mps
 devices: 1
+precision: 16

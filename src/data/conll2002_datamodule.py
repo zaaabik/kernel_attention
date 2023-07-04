@@ -6,7 +6,6 @@ from datasets import load_dataset
 
 from transformers import DataCollatorForTokenClassification, AutoTokenizer, DataCollator
 
-
 class CoNLL2002DataModule(LightningDataModule):
     """Example of LightningDataModule for MNIST dataset.
 
@@ -45,7 +44,7 @@ class CoNLL2002DataModule(LightningDataModule):
             collate_fn: DataCollator = DataCollatorForTokenClassification(
                 tokenizer=AutoTokenizer.from_pretrained('xlm-roberta-large-finetuned-conll02-spanish')
             ),
-            max_seq_length: int = 512,
+            max_seq_length: int = 128,
             padding: bool = True,
     ):
         super().__init__()
@@ -58,11 +57,14 @@ class CoNLL2002DataModule(LightningDataModule):
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
+
+        self.data_train_dataset: Optional[Dataset] = None
+        self.data_val_dataset: Optional[Dataset] = None
+        self.data_test_dataset: Optional[Dataset] = None
+
         self.tokenizer = None
         self.number_of_classes = None
         self.label_to_idx = None
-
-
 
     def num_classes(self):
         return self.number_of_classes
@@ -94,13 +96,13 @@ class CoNLL2002DataModule(LightningDataModule):
 
         self.number_of_classes = self.data_train.features[self.hparams.label_column_name].feature.num_classes
 
-        self.data_train = self.process_dataset(self.data_train)
-        self.data_val = self.process_dataset(self.data_val)
-        self.data_test = self.process_dataset(self.data_test)
+        self.data_train_dataset = self.process_dataset(self.data_train)
+        self.data_val_dataset = self.process_dataset(self.data_val)
+        self.data_test_dataset = self.process_dataset(self.data_test)
 
     def train_dataloader(self):
         return DataLoader(
-            dataset=self.data_train,
+            dataset=self.data_train_dataset,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
@@ -110,7 +112,7 @@ class CoNLL2002DataModule(LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.data_val,
+            dataset=self.data_val_dataset,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
@@ -120,7 +122,7 @@ class CoNLL2002DataModule(LightningDataModule):
 
     def test_dataloader(self):
         return DataLoader(
-            dataset=self.data_test,
+            dataset=self.data_test_dataset,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
@@ -177,9 +179,10 @@ if __name__ == "__main__":
     datamodule = CoNLL2002DataModule()
     datamodule.prepare_data()
     datamodule.setup()
-    print(f'Train size: {len(datamodule.train_dataloader())}')
-    print(f'Validation size: {len(datamodule.val_dataloader())}')
-    print(f'Test size: {len(datamodule.test_dataloader())}')
-    batch: DataCollatorForTokenClassification = next(iter(datamodule.train_dataloader()))
-    print(type(batch))
-    print(batch)
+    print(datamodule.num_classes())
+    # print(f'Train size: {len(datamodule.train_dataloader())}')
+    # print(f'Validation size: {len(datamodule.val_dataloader())}')
+    # print(f'Test size: {len(datamodule.test_dataloader())}')
+    # batch: DataCollatorForTokenClassification = next(iter(datamodule.train_dataloader()))
+    # print(type(batch))
+    # print(batch)

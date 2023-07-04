@@ -4,6 +4,8 @@ import pytest
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import open_dict
 
+from src.data.conll2002_datamodule import CoNLL2002DataModule
+from src.models.components.pre_trained_llm import PreTrainedLLM
 from src.train import train
 from tests.helpers.run_if import RunIf
 
@@ -12,8 +14,21 @@ def test_train_fast_dev_run(cfg_train):
     """Run for 1 train, val and test step."""
     HydraConfig().set_config(cfg_train)
     with open_dict(cfg_train):
-        cfg_train.trainer.fast_dev_run = True
+        cfg_train.trainer.limit_train_batches = 3
+        cfg_train.trainer.limit_val_batches = 3
+        cfg_train.trainer.limit_test_batches = 3
         cfg_train.trainer.accelerator = "cpu"
+    train(cfg_train)
+
+
+def test_train_fast_dev_run_mps(cfg_train):
+    """Run for 1 train, val and test step."""
+    HydraConfig().set_config(cfg_train)
+    with open_dict(cfg_train):
+        cfg_train.trainer.limit_train_batches = 3
+        cfg_train.trainer.limit_val_batches = 3
+        cfg_train.trainer.limit_test_batches = 3
+        cfg_train.trainer.accelerator = "mps"
     train(cfg_train)
 
 

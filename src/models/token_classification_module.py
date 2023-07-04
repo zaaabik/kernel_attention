@@ -3,10 +3,10 @@ from typing import Any
 import torch
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
-from torchmetrics.classification.accuracy import Accuracy
+from torchmetrics import F1Score
 
 
-class MNISTLitModule(LightningModule):
+class TokenClassificationModule(LightningModule):
     """Example of LightningModule for MNIST classification.
 
     A LightningModule organizes your PyTorch code into 6 sections:
@@ -26,6 +26,7 @@ class MNISTLitModule(LightningModule):
         net: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
+        num_classes: int
     ):
         super().__init__()
 
@@ -39,9 +40,9 @@ class MNISTLitModule(LightningModule):
         self.criterion = torch.nn.CrossEntropyLoss()
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = Accuracy(task="multiclass", num_classes=10)
-        self.val_acc = Accuracy(task="multiclass", num_classes=10)
-        self.test_acc = Accuracy(task="multiclass", num_classes=10)
+        self.train_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes)
+        self.val_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes)
+        self.test_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes)
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -62,22 +63,19 @@ class MNISTLitModule(LightningModule):
         self.val_acc_best.reset()
 
     def model_step(self, batch: Any):
-        x, y = batch
-        logits = self.forward(x)
-        loss = self.criterion(logits, y)
-        preds = torch.argmax(logits, dim=1)
+        out = self.forward(batch)
+        loss = out.loss
+        preds = out.logits.argmax(axis=-1)
+        y = batch['labels']
         return loss, preds, y
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
-
-        # update and log metrics
         self.train_loss(loss)
         self.train_acc(preds, targets)
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
 
-        # return loss or backpropagation will fail
         return loss
 
     def on_train_epoch_end(self):
@@ -90,14 +88,14 @@ class MNISTLitModule(LightningModule):
         self.val_loss(loss)
         self.val_acc(preds, targets)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/f1", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self):
         acc = self.val_acc.compute()  # get current val acc
         self.val_acc_best(acc)  # update best so far val acc
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
-        self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
+        self.log("val/f1_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
@@ -106,7 +104,7 @@ class MNISTLitModule(LightningModule):
         self.test_loss(loss)
         self.test_acc(preds, targets)
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/f1", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_test_epoch_end(self):
         pass
@@ -134,4 +132,4 @@ class MNISTLitModule(LightningModule):
 
 
 if __name__ == "__main__":
-    _ = MNISTLitModule(None, None, None)
+    _ = TokenClassificationModule(None, None, None)
