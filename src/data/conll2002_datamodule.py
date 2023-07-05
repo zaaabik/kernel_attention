@@ -78,7 +78,7 @@ class CoNLL2002DataModule(LightningDataModule):
 
     def process_dataset(self, dataset):
         return dataset.map(self.tokenize_and_align_labels,
-                           batched=True, num_proc=2).remove_columns(['id', 'tokens', 'pos_tags', 'ner_tags'])
+                           batched=True, num_proc=1).remove_columns(['id', 'tokens', 'pos_tags', 'ner_tags'])
 
     def setup(self, stage: Optional[str] = None):
         """Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
