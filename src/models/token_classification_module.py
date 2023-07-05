@@ -44,9 +44,9 @@ class TokenClassificationModule(LightningModule):
         self.val_acc = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
         self.test_acc = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
 
-        self.train_f1 = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
-        self.val_f1 = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
-        self.test_f1 = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
+        self.train_f1 = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
+        self.val_f1 = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
+        self.test_f1 = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
