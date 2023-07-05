@@ -3,7 +3,7 @@ from typing import Any
 import torch
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
-from torchmetrics import F1Score
+from torchmetrics import Accuracy
 
 
 class TokenClassificationModule(LightningModule):
@@ -40,9 +40,9 @@ class TokenClassificationModule(LightningModule):
         self.criterion = torch.nn.CrossEntropyLoss()
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
-        self.val_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
-        self.test_acc = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
+        self.train_acc = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
+        self.val_acc = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
+        self.test_acc = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
