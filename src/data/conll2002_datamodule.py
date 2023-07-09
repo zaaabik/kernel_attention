@@ -37,7 +37,7 @@ class CoNLL2002DataModule(LightningDataModule):
             self,
             language: str = 'es',
             text_column_name: str = 'tokens',
-            label_column_name: str = 'pos_tags',
+            label_column_name: str = 'ner_tags',
             batch_size: int = 64,
             num_workers: int = 0,
             pin_memory: bool = False,
