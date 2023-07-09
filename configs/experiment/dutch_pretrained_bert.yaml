@@ -21,4 +21,4 @@ data:
 
 logger:
   comet:
-    experiment_name: ${data.language}_pretrained_bert_${seed}_${data.max_seq_length}
+    experiment_name: ${data.language}_NER_pretrained_bert_${seed}_${data.max_seq_length}
