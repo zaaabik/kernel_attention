@@ -97,6 +97,7 @@ class CoNLL2002DataModule(LightningDataModule):
             self.data_test = load_dataset('conll2002', self.hparams.language, split='test')
 
         self.number_of_classes = self.data_train.features[self.hparams.label_column_name].feature.num_classes
+
         print('########### passed', self.num_classes_passed)
         print('########### dataset classes', self.number_of_classes)
         assert self.num_classes_passed == self.number_of_classes, 'Number of passed classes should be the same as in ' \
@@ -158,37 +159,74 @@ class CoNLL2002DataModule(LightningDataModule):
         """Things to do when loading checkpoint."""
         pass
 
+    def align_labels_with_tokens(self, labels, word_ids):
+        new_labels = []
+        current_word = None
+        for word_id in word_ids:
+            if word_id != current_word:
+                # Start of a new word!
+                current_word = word_id
+                label = -100 if word_id is None else labels[word_id]
+                new_labels.append(label)
+            elif word_id is None:
+                # Special token
+                new_labels.append(-100)
+            else:
+                # Same word as previous token
+                label = labels[word_id]
+                # If the label is B-XXX we change it to I-XXX
+                if label % 2 == 1:
+                    label += 1
+                new_labels.append(label)
+
+        return new_labels
+
     def tokenize_and_align_labels(self, examples):
         tokenized_inputs = self.tokenizer(
-            examples[self.hparams.text_column_name],
-            padding=self.hparams.padding,
-            truncation=True,
-            max_length=self.hparams.max_seq_length,
-            # We use this argument because the texts in our dataset are lists of words (with a label for each word).
-            is_split_into_words=True,
+            examples[self.hparams.text_column_name], truncation=True, is_split_into_words=True,
+            # padding=self.hparams.padding, max_length=self.hparams.max_seq_length,
         )
-        labels = []
-        for i, label in enumerate(examples[self.hparams.label_column_name]):
-            word_ids = tokenized_inputs.word_ids(batch_index=i)
-            previous_word_idx = None
-            label_ids = []
-            for word_idx in word_ids:
-                # Special tokens have a word id that is None. We set the label to -100 so they are automatically
-                # ignored in the loss function.
-                if word_idx is None:
-                    label_ids.append(-100)
-                # We set the label for the first token of each word.
-                elif word_idx != previous_word_idx:
-                    label_ids.append(label[word_idx])
-                # For the other tokens in a word, we set the label to either the current label or -100, depending on
-                # the label_all_tokens flag.
-                else:
-                    label_ids.append(-100)
-                previous_word_idx = word_idx
+        all_labels = examples[self.hparams.label_column_name]
+        new_labels = []
+        for i, labels in enumerate(all_labels):
+            word_ids = tokenized_inputs.word_ids(i)
 
-            labels.append(label_ids)
-        tokenized_inputs["labels"] = labels
+            new_labels.append(self.align_labels_with_tokens(labels, word_ids))
+
+        tokenized_inputs["labels"] = new_labels
         return tokenized_inputs
+
+    # def tokenize_and_align_labels(self, examples):
+    #     tokenized_inputs = self.tokenizer(
+    #         examples[self.hparams.text_column_name],
+    #         padding=self.hparams.padding,
+    #         truncation=True,
+    #         max_length=self.hparams.max_seq_length,
+    #         # We use this argument because the texts in our dataset are lists of words (with a label for each word).
+    #         is_split_into_words=True,
+    #     )
+    #     labels = []
+    #     for i, label in enumerate(examples[self.hparams.label_column_name]):
+    #         word_ids = tokenized_inputs.word_ids(batch_index=i)
+    #         previous_word_idx = None
+    #         label_ids = []
+    #         for word_idx in word_ids:
+    #             # Special tokens have a word id that is None. We set the label to -100 so they are automatically
+    #             # ignored in the loss function.
+    #             if word_idx is None:
+    #                 label_ids.append(-100)
+    #             # We set the label for the first token of each word.
+    #             elif word_idx != previous_word_idx:
+    #                 label_ids.append(label[word_idx])
+    #             # For the other tokens in a word, we set the label to either the current label or -100, depending on
+    #             # the label_all_tokens flag.
+    #             else:
+    #                 label_ids.append(-100)
+    #             previous_word_idx = word_idx
+    #
+    #         labels.append(label_ids)
+    #     tokenized_inputs["labels"] = labels
+    #     return tokenized_inputs
 
 
 if __name__ == "__main__":
