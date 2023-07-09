@@ -1,15 +1,14 @@
 import torch.nn
 from torch import nn
 
-from transformers import AutoModelForTokenClassification
+from transformers import AutoModelForTokenClassification, AutoConfig
 
-from src.data.conll2002_datamodule import CoNLL2002DataModule
 
 class PreTrainedLLM(nn.Module):
     def __init__(
-        self,
-        model_name: str,
-        num_classes: int = 10,
+            self,
+            model_name: str,
+            num_classes: int = 10,
     ):
         super().__init__()
 
@@ -21,8 +20,24 @@ class PreTrainedLLM(nn.Module):
         return self.model(**x)
 
 
+class ModelFromConfig(nn.Module):
+    def __init__(
+            self,
+            model_name: str,
+            num_classes: int = 10,
+    ):
+        super().__init__()
+        config = AutoConfig.from_pretrained(model_name)
+        self.model = AutoModelForTokenClassification.from_config(config)
+        self.model.num_labels = num_classes
+        self.model.classifier = torch.nn.Linear(768, num_classes)
+
+    def forward(self, x):
+        return self.model(**x)
+
+
 if __name__ == "__main__":
-    _ = PreTrainedLLM('xlm-roberta-base')
+    _ = ModelFromConfig('xlm-roberta-base')
 
     # datamodule = CoNLL2002DataModule(batch_size=1)
     #

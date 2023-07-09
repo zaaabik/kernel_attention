@@ -5,7 +5,7 @@ from hydra.core.hydra_config import HydraConfig
 from omegaconf import open_dict
 
 from src.data.conll2002_datamodule import CoNLL2002DataModule
-from src.models.components.pre_trained_llm import PreTrainedLLM
+from src.models.components.pre_trained_llm import ModelFromConfig
 from src.train import train
 from tests.helpers.run_if import RunIf
 

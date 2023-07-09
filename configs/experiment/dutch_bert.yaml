@@ -1,0 +1,29 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /data: conll2002.yaml
+  - override /logger: comet.yaml
+  - override /model: token_classification_module.yaml
+#  - override /callbacks: default.yaml
+#  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["dutch", "bert"]
+
+model:
+  net:
+    _target_: src.models.components.pre_trained_llm.PreTrainedLLM
+
+data:
+  max_seq_length: 256
+  language: nl
+  num_classes: 12
+
+logger:
+  comet:
+    experiment_name: ${data.language}_bert_${seed}_${data.max_seq_length}
