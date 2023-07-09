@@ -136,6 +136,16 @@ class CoNLL2002DataModule(LightningDataModule):
             collate_fn=self.hparams.collate_fn,
         )
 
+    def predict_dataloader(self):
+        return DataLoader(
+            dataset=self.data_test_dataset,
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            pin_memory=self.hparams.pin_memory,
+            shuffle=False,
+            collate_fn=self.hparams.collate_fn,
+        )
+
     def teardown(self, stage: Optional[str] = None):
         """Clean up after fit or test."""
         pass
