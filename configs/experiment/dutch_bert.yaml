@@ -22,7 +22,7 @@ model:
 data:
   max_seq_length: 256
   language: nl
-  num_classes: 12
+  num_classes: 9
 
 logger:
   comet:
