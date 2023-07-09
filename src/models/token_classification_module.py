@@ -105,6 +105,14 @@ class TokenClassificationModule(LightningModule):
         # otherwise metric would be reset by lightning after each epoch
         self.log("val/f1_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
 
+    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> Any:
+        loss, preds, targets = self.model_step(batch)
+
+        return {
+            'prediction' : preds.detach().cpu(),
+            'targets': targets.detach().cpu(),
+        }
+
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.model_step(batch)
 

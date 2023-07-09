@@ -7,6 +7,7 @@ import torch
 from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
+import os
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
@@ -96,6 +97,19 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
             ckpt_path = None
         ckpt_path = ckpt_path or cfg.get("ckpt_path")
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
+        log.info(f"Best ckpt path: {ckpt_path}")
+
+    if cfg.get('predict'):
+        out_path = cfg['paths']['output_dir']
+        out_path = os.path.join(out_path, 'prediction.pkl')
+        log.info(f"Starting prediction to {out_path}")
+        ckpt_path = trainer.checkpoint_callback.best_model_path
+        if ckpt_path == "":
+            log.warning("Best ckpt not found! Using current weights for testing...")
+            ckpt_path = None
+        ckpt_path = ckpt_path or cfg.get("ckpt_path")
+        output = trainer.predict(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
+        torch.save(output, out_path)
         log.info(f"Best ckpt path: {ckpt_path}")
 
     test_metrics = trainer.callback_metrics
