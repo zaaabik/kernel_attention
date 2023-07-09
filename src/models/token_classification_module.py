@@ -102,7 +102,7 @@ class TokenClassificationModule(LightningModule):
         self.log("val/f1", self.val_f1, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self):
-        acc = self.val_acc.compute()  # get current val acc
+        acc = self.val_f1.compute()  # get current val acc
         self.val_acc_best(acc)  # update best so far val acc
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
