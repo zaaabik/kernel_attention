@@ -5,7 +5,7 @@
 
 defaults:
   - override /data: conll2002.yaml
-#  - override /model: mnist.yaml
+  - override /logger: comet.yaml
 #  - override /callbacks: default.yaml
 #  - override /trainer: default.yaml
 
@@ -17,3 +17,8 @@ tags: ["dutch", "pretrained_bert"]
 data:
   max_seq_length: 256
   language: es
+  num_classes: 60
+
+logger:
+  comet:
+    experiment_name: ${data.language}_pretrained_bert_${seed}_${data.max_seq_length}

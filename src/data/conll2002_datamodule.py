@@ -46,6 +46,7 @@ class CoNLL2002DataModule(LightningDataModule):
             ),
             max_seq_length: int = 128,
             padding: bool = True,
+            num_classes: int = -1
     ):
         super().__init__()
 
@@ -64,6 +65,7 @@ class CoNLL2002DataModule(LightningDataModule):
 
         self.tokenizer = None
         self.number_of_classes = None
+        self.num_classes_passed = num_classes
         self.label_to_idx = None
 
     def num_classes(self):
@@ -95,6 +97,10 @@ class CoNLL2002DataModule(LightningDataModule):
             self.data_test = load_dataset('conll2002', self.hparams.language, split='test')
 
         self.number_of_classes = self.data_train.features[self.hparams.label_column_name].feature.num_classes
+        print('########### passed', self.num_classes_passed)
+        print('########### dataset classes', self.number_of_classes)
+        assert self.num_classes_passed == self.number_of_classes, 'Number of passed classes should be the same as in ' \
+                                                                   'dataset'
 
         self.data_train_dataset = self.process_dataset(self.data_train)
         self.data_val_dataset = self.process_dataset(self.data_val)
