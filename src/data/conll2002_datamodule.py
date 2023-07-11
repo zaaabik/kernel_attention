@@ -88,15 +88,12 @@ class CoNLL2002DataModule(LightningDataModule):
         This method is called by lightning with both `trainer.fit()` and `trainer.test()`, so be
         careful not to execute things like random split twice!
         """
-        # load and split datasets only if not loaded already
-        self.tokenizer = AutoTokenizer.from_pretrained('xlm-roberta-large-finetuned-conll02-spanish')
-
         if not self.data_train and not self.data_val and not self.data_test:
             self.data_train = load_dataset('conll2002', self.hparams.language, split='train')
             self.data_val = load_dataset('conll2002', self.hparams.language, split='validation')
             self.data_test = load_dataset('conll2002', self.hparams.language, split='test')
 
-        self.tokenizer = AutoTokenizer.from_pretrained(self.hparams.tokenizer)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.hparams.tokenizer, add_prefix_space=True)
         self.collate_fn = DataCollatorForTokenClassification(
             tokenizer=self.tokenizer
         )
