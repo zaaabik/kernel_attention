@@ -22,5 +22,5 @@ scheduler:
 
 net:
   _target_: src.models.components.pre_trained_llm.ModelFromConfig
-  model_name: 'xlm-roberta-base'
+  model_name: 'distilroberta-base'
   num_classes: ${data.num_classes}

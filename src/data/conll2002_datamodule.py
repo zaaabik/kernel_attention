@@ -4,7 +4,8 @@ from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 from datasets import load_dataset
 
-from transformers import DataCollatorForTokenClassification, AutoTokenizer, DataCollator
+from transformers import DataCollatorForTokenClassification, AutoTokenizer
+
 
 class CoNLL2002DataModule(LightningDataModule):
     """Example of LightningDataModule for MNIST dataset.
@@ -41,9 +42,7 @@ class CoNLL2002DataModule(LightningDataModule):
             batch_size: int = 64,
             num_workers: int = 0,
             pin_memory: bool = False,
-            collate_fn: DataCollator = DataCollatorForTokenClassification(
-                tokenizer=AutoTokenizer.from_pretrained('xlm-roberta-large-finetuned-conll02-spanish')
-            ),
+            tokenizer: str = 'distilroberta-base',
             max_seq_length: int = 128,
             padding: bool = True,
             num_classes: int = -1
@@ -58,6 +57,7 @@ class CoNLL2002DataModule(LightningDataModule):
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
+        self.collate_fn = None
 
         self.data_train_dataset: Optional[Dataset] = None
         self.data_val_dataset: Optional[Dataset] = None
@@ -96,12 +96,17 @@ class CoNLL2002DataModule(LightningDataModule):
             self.data_val = load_dataset('conll2002', self.hparams.language, split='validation')
             self.data_test = load_dataset('conll2002', self.hparams.language, split='test')
 
+        self.tokenizer = AutoTokenizer.from_pretrained(self.hparams.tokenizer)
+        self.collate_fn = DataCollatorForTokenClassification(
+            tokenizer=self.tokenizer
+        )
+
         self.number_of_classes = self.data_train.features[self.hparams.label_column_name].feature.num_classes
 
         print('########### passed', self.num_classes_passed)
         print('########### dataset classes', self.number_of_classes)
         assert self.num_classes_passed == self.number_of_classes, 'Number of passed classes should be the same as in ' \
-                                                                   'dataset'
+                                                                  'dataset'
 
         self.data_train_dataset = self.process_dataset(self.data_train)
         self.data_val_dataset = self.process_dataset(self.data_val)
@@ -114,7 +119,7 @@ class CoNLL2002DataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=True,
-            collate_fn=self.hparams.collate_fn,
+            collate_fn=self.collate_fn,
         )
 
     def val_dataloader(self):
@@ -124,7 +129,7 @@ class CoNLL2002DataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            collate_fn=self.hparams.collate_fn,
+            collate_fn=self.collate_fn,
         )
 
     def test_dataloader(self):
@@ -132,9 +137,9 @@ class CoNLL2002DataModule(LightningDataModule):
             dataset=self.data_test_dataset,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
+            pin_memory=self.pin_memory,
             shuffle=False,
-            collate_fn=self.hparams.collate_fn,
+            collate_fn=self.collate_fn,
         )
 
     def predict_dataloader(self):
