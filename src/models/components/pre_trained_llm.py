@@ -11,10 +11,12 @@ class PreTrainedLLM(nn.Module):
             num_classes: int = 10,
     ):
         super().__init__()
+        config = AutoConfig.from_pretrained(
+            model_name, num_labels=num_classes,
+            finetuning_task='ner'
+        )
 
-        self.model = AutoModelForTokenClassification.from_pretrained(model_name)
-        self.model.num_labels = num_classes
-        self.model.classifier = torch.nn.Linear(768, num_classes)
+        self.model = AutoModelForTokenClassification.from_config(config)
 
     def forward(self, x):
         return self.model(**x)
