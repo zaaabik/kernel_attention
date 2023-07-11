@@ -16,7 +16,7 @@ optimizer:
 scheduler:
   _target_: torch.optim.lr_scheduler.LinearLR
   _partial_: true
-  start_factor: 0
+  start_factor: 0.00001
   end_factor: 1
   total_iters: 5
 
