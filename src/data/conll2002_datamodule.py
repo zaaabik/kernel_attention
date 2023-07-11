@@ -134,7 +134,7 @@ class CoNLL2002DataModule(LightningDataModule):
             dataset=self.data_test_dataset,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
-            pin_memory=self.pin_memory,
+            pin_memory=self.hparams.pin_memory,
             shuffle=False,
             collate_fn=self.collate_fn,
         )
