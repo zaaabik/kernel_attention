@@ -25,9 +25,11 @@ class ModelFromConfig(nn.Module):
             self,
             model_name: str,
             num_classes: int = 10,
+            dropout=0.3
     ):
         super().__init__()
         config = AutoConfig.from_pretrained(model_name)
+        config.hidden_dropout_prob = dropout
         self.model = AutoModelForTokenClassification.from_config(config)
         self.model.num_labels = num_classes
         self.model.classifier = torch.nn.Linear(768, num_classes)
