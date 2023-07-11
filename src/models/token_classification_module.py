@@ -144,7 +144,7 @@ class TokenClassificationModule(LightningModule):
                 "optimizer": optimizer,
                 "lr_scheduler": {
                     "scheduler": scheduler,
-                    "monitor": "val/loss",
+                    # "monitor": "val/loss",
                     "interval": "epoch",
                     "frequency": 1,
                 },
