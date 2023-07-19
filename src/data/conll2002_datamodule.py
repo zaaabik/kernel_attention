@@ -190,7 +190,7 @@ class CoNLL2002DataModule(LightningDataModule):
                     # if data_args.label_all_tokens:
                     #     label_ids.append(b_to_i_label[label_to_id[label[word_idx]]])
                     # else:
-                    label_ids.append(-100)
+                    label_ids.append(label[word_idx])
                 previous_word_idx = word_idx
 
             labels.append(label_ids)
