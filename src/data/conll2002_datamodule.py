@@ -112,7 +112,7 @@ class CoNLL2002DataModule(LightningDataModule):
 
     def train_dataloader(self):
         return DataLoader(
-            dataset=self.data_train_dataset,
+            dataset=self.data_val_dataset,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
@@ -122,7 +122,7 @@ class CoNLL2002DataModule(LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.data_val_dataset,
+            dataset=self.data_train_dataset,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
