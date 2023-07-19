@@ -147,7 +147,7 @@ class CoNLL2002DataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            collate_fn=self.hparams.collate_fn,
+            collate_fn=self.collate_fn,
         )
 
     def teardown(self, stage: Optional[str] = None):
