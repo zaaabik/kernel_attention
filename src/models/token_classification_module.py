@@ -3,7 +3,7 @@ from typing import Any
 import torch
 from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
-from torchmetrics import Accuracy, F1Score
+from torchmetrics import Accuracy, F1Score, Precision, Recall
 
 
 class TokenClassificationModule(LightningModule):
@@ -39,17 +39,29 @@ class TokenClassificationModule(LightningModule):
         # loss function
         self.criterion = torch.nn.CrossEntropyLoss()
 
-        # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
-        self.val_acc = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
-        self.test_acc = Accuracy(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100)
+        metric_prams = dict(
+            task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100
+        )
 
-        self.train_f1 = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100,
+        # metric objects for calculating and averaging accuracy across batches
+        self.train_acc = Accuracy(**metric_prams)
+        self.val_acc = Accuracy(**metric_prams)
+        self.test_acc = Accuracy(**metric_prams)
+
+        self.train_f1 = F1Score(**metric_prams,
                                 average='macro')
-        self.val_f1 = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100,
+        self.val_f1 = F1Score(**metric_prams,
                               average='macro')
-        self.test_f1 = F1Score(task="multiclass", num_classes=self.hparams.num_classes, ignore_index=-100,
+        self.test_f1 = F1Score(**metric_prams,
                                average='macro')
+
+        self.train_precision = Precision(**metric_prams, average='macro')
+        self.val_precision = Precision(**metric_prams, average='macro')
+        self.test_precision = Precision(**metric_prams, average='macro')
+
+        self.train_recall = Recall(**metric_prams, average='macro')
+        self.val_recall = Recall(**metric_prams, average='macro')
+        self.test_recall = Recall(**metric_prams, average='macro')
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -81,9 +93,14 @@ class TokenClassificationModule(LightningModule):
         self.train_loss(loss)
         self.train_acc(preds, targets)
         self.train_f1(preds, targets)
+        self.train_precision(preds, targets)
+        self.train_recall(preds, targets)
+
         self.log("train/loss", self.train_loss, on_step=True, on_epoch=True, prog_bar=True)
         self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/f1", self.train_f1, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/precession", self.train_precision, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/recall", self.train_recall, on_step=False, on_epoch=True, prog_bar=True)
 
         return loss
 
@@ -97,9 +114,13 @@ class TokenClassificationModule(LightningModule):
         self.val_loss(loss)
         self.val_acc(preds, targets)
         self.val_f1(preds, targets)
+        self.val_precision(preds, targets)
+        self.val_recall(preds, targets)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/f1", self.val_f1, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/precession", self.val_precision, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/recall", self.val_recall, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self):
         acc = self.val_f1.compute()  # get current val acc
