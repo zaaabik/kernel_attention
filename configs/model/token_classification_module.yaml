@@ -21,6 +21,6 @@ scheduler:
 #  total_iters: 5
 
 net:
-  _target_: src.models.components.pre_trained_llm.ModelFromConfig
+  _target_: src.models.components.pre_trained_llm.PreTrainedLLM
   model_name: 'distilroberta-base'
   num_classes: ${data.num_classes}
