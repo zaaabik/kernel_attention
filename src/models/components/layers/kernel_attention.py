@@ -4,19 +4,36 @@ import gpytorch
 
 class KernelAttention(torch.nn.Module):
     def __init__(self,
-                 kernel_class: gpytorch.kernels.Kernel = gpytorch.kernels.RBFKernel(),
-                 lmbda: float = 0.1
+                 embed_dim: int,
+                 n_heads: int,
+                 kernel_class: gpytorch.kernels.Kernel,
+                 num_classes: int,
+                 lmbda: float = 0.1,
                  ):
         super().__init__()
         self.kernel = kernel_class.initialize()
         self.lmbda = torch.nn.Parameter(torch.tensor(lmbda), requires_grad=False)
+        self.input_projection = torch.nn.Linear(embed_dim, embed_dim)
+        self.out_projection = torch.nn.Linear(embed_dim, num_classes)
+        self.n_heads = n_heads
+        self.embed_dim = embed_dim
+        self.head_dim = embed_dim // n_heads
 
     def forward(self, x):
         bs, seq_len, f = x.shape
 
-        K = self.kernel(x, x).evaluate()
+        input_projection = self.input_projection(x)
+        input_projection = input_projection.reshape(bs, seq_len, self.n_heads, self.head_dim)
+        input_projection = input_projection.permute(0, 2, 1, 3)
+
+        K = self.kernel(input_projection, input_projection).evaluate()
         attention = K @ (
-                torch.inverse(K - torch.eye(seq_len, device=x.device) * self.lmbda)
+                torch.inverse(K) - torch.eye(seq_len, device=x.device) * self.lmbda
         )
-        output = attention @ x
-        return output
+
+        output = attention @ input_projection
+        out_projection = self.out_projection(
+            output.reshape(bs, seq_len, self.embed_dim)
+        )
+
+        return out_projection
