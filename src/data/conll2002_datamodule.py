@@ -94,7 +94,9 @@ class CoNLL2002DataModule(LightningDataModule):
             self.data_val = load_dataset('conll2003', split='validation')
             self.data_test = load_dataset('conll2003', split='test')
 
-        self.tokenizer = AutoTokenizer.from_pretrained(self.hparams.tokenizer, add_prefix_space=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.hparams.tokenizer,
+                                                       use_fast=True, add_prefix_space=True)
+
         self.collate_fn = DataCollatorForTokenClassification(
             tokenizer=self.tokenizer
         )
