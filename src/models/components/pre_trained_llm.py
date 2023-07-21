@@ -1,7 +1,6 @@
-import torch.nn
 from torch import nn
 
-from transformers import AutoModelForTokenClassification, AutoConfig
+from transformers import AutoModelForTokenClassification
 
 
 class PreTrainedLLM(nn.Module):
