@@ -26,10 +26,9 @@ class KernelAttention(torch.nn.Module):
         input_projection = input_projection.reshape(bs, seq_len, self.n_heads, self.head_dim)
         input_projection = input_projection.permute(0, 2, 1, 3)
 
-        K = self.kernel(input_projection, input_projection).evaluate()
-        attention = K @ (
-                torch.linalg.pinv(K.float()) - torch.eye(seq_len, device=x.device) * self.lmbda
-        )
+        k = self.kernel(input_projection, input_projection).evaluate()
+        k_inversed = torch.linalg.pinv(k - torch.eye(seq_len, device=x.device) * self.lmbda)
+        attention = k @ k_inversed
 
         output = attention @ input_projection
         out_projection = self.out_projection(
