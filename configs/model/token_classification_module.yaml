@@ -11,7 +11,7 @@ scheduler:
   _partial_: true
   mode: max
   factor: 0.1
-  patience: 5
+  patience: 2
 
 #scheduler:
 #  _target_: torch.optim.lr_scheduler.LinearLR
