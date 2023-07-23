@@ -3,8 +3,7 @@ from torch import nn
 
 from transformers import AutoModelForTokenClassification
 
-from src.models.components.layers.kernel_attention import KernelAttention, LinearAttention, LinearTransformerLayer, \
-    EncoderBlock
+from src.models.components.layers.kernel_attention import KernelAttention, EncoderBlock
 
 
 class PreTrainedLLM(nn.Module):
