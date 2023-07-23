@@ -30,7 +30,7 @@ class KernelAttention(torch.nn.Module):
 
         k = input_projection @ input_projection.T #self.kernel(input_projection, input_projection).evaluate()
         k_inversed = self.inverse_function(k - torch.eye(seq_len, device=x.device) * self.lmbda)
-        attention = k @ k_inversed
+        attention = k # @ k_inversed
 
         output = attention @ input_projection
         out_projection = self.out_projection(
