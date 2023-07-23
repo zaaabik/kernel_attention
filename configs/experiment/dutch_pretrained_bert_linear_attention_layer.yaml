@@ -24,6 +24,8 @@ model:
   net:
     _target_: src.models.components.pre_trained_llm.PreTrainedLLMAttentionLayerCLS
     kernel_attention_num_heads: 4
+    attention: true
+    ff: false
 
 
 logger:

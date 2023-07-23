@@ -81,8 +81,8 @@ def scaled_dot_product(q, k, v):
     return values, attention
 
 
-class LinearTransformerLayer(torch.nn.Module):
-    def __init__(self, input_dim, embed_dim, num_heads, num_classes):
+class MultiheadAttention(torch.nn.Module):
+    def __init__(self, input_dim, embed_dim, num_heads):
         super().__init__()
         assert embed_dim % num_heads == 0, "Embedding dimension must be 0 modulo number of heads."
 
@@ -93,7 +93,7 @@ class LinearTransformerLayer(torch.nn.Module):
         # Stack all weight matrices 1...h together for efficiency
         # Note that in many implementations you see "bias=False" which is optional
         self.qkv_proj = torch.nn.Linear(input_dim, 3 * embed_dim)
-        self.o_proj = torch.nn.Linear(embed_dim, num_classes)
+        self.o_proj = torch.nn.Linear(embed_dim, embed_dim)
 
         self._reset_parameters()
 
@@ -118,3 +118,52 @@ class LinearTransformerLayer(torch.nn.Module):
         values = values.permute(0, 2, 1, 3)  # [Batch, SeqLen, Head, Dims]
         values = values.reshape(batch_size, seq_length, self.embed_dim)
         return self.o_proj(values)
+
+
+class EncoderBlock(torch.nn.Module):
+
+    def __init__(self, input_dim, num_heads, dim_feedforward, dropout=0.0, ff=True, attention=True):
+        """
+        Inputs:
+            input_dim - Dimensionality of the input
+            num_heads - Number of heads to use in the attention block
+            dim_feedforward - Dimensionality of the hidden layer in the MLP
+            dropout - Dropout probability to use in the dropout layers
+        """
+        super().__init__()
+
+        # Attention layer
+        if attention:
+            self.self_attn = MultiheadAttention(input_dim, input_dim, num_heads)
+        else:
+            self.self_attn = torch.nn.Identity()
+
+        # Two-layer MLP
+        self.ff = ff
+        if self.ff:
+            self.linear_net = torch.nn.Sequential(
+                torch.nn.Linear(input_dim, dim_feedforward),
+                torch.nn.Dropout(dropout),
+                torch.nn.ReLU(inplace=True),
+                torch.nn.Linear(dim_feedforward, input_dim)
+            )
+        else:
+            self.ff = torch.nn.Identity()
+
+        # Layers to apply in between the main layers
+        self.norm1 = torch.nn.LayerNorm(input_dim)
+        self.norm2 = torch.nn.LayerNorm(input_dim)
+        self.dropout = torch.nn.Dropout(dropout)
+
+    def forward(self, x):
+        # Attention part
+        attn_out = self.self_attn(x)
+        x = x + self.dropout(attn_out)
+        x = self.norm1(x)
+
+        # MLP part
+        linear_out = self.linear_net(x)
+        x = x + self.dropout(linear_out)
+        x = self.norm2(x)
+
+        return x
