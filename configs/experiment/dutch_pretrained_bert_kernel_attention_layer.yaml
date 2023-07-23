@@ -23,6 +23,11 @@ data:
 model:
   net:
     _target_: src.models.components.pre_trained_llm.PreTrainedLLMKernelAttention
+    kernel_attention_num_heads: 4
+    kernel_function: gpytorch.kernels.RBFKernel
+    kernel_regularization: 0.01
+    inverse_function: torch.inverse
+
 
 logger:
   comet:

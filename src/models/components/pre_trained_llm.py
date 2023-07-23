@@ -1,6 +1,4 @@
-import torch.nn
 from torch import nn
-import gpytorch
 
 from transformers import AutoModelForTokenClassification
 
@@ -50,6 +48,10 @@ class PreTrainedLLMKernelAttention(nn.Module):
             self,
             model_name: str,
             num_classes: int = 10,
+            kernel_attention_num_heads: int = 1,
+            kernel_function=None,
+            kernel_regularization: float = 0.01,
+            inverse_function=None
     ):
         super().__init__()
 
@@ -61,8 +63,12 @@ class PreTrainedLLMKernelAttention(nn.Module):
         self.model.roberta.requires_grad_(False)
 
         self.kernel_attention = KernelAttention(
-            768, 1,
-            gpytorch.kernels.RBFKernel(), num_classes,
+            768,
+            n_heads=kernel_attention_num_heads,
+            kernel_class=kernel_function,
+            num_classes=num_classes,
+            lmbda=kernel_regularization,
+            inverse_function=inverse_function
         )
 
         self.model.classifier = self.kernel_attention
