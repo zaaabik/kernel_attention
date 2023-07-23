@@ -29,6 +29,7 @@ model:
     kernel_regularization: 0.01
     inverse_function:
       _target_: torch.inverse
+      _partial_: true
 
 
 logger:
