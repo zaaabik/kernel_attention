@@ -28,7 +28,7 @@ class KernelAttention(torch.nn.Module):
 
         K = self.kernel(input_projection, input_projection).evaluate()
         attention = K @ (
-                torch.inverse(K) - torch.eye(seq_len, device=x.device) * self.lmbda
+                torch.linalg.pinv(K) - torch.eye(seq_len, device=x.device) * self.lmbda
         )
 
         output = attention @ input_projection
