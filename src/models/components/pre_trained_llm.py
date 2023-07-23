@@ -2,7 +2,7 @@ from torch import nn
 
 from transformers import AutoModelForTokenClassification
 
-from src.models.components.layers.kernel_attention import KernelAttention
+from src.models.components.layers.kernel_attention import KernelAttention, LinearAttention
 
 
 class PreTrainedLLM(nn.Module):
@@ -69,6 +69,34 @@ class PreTrainedLLMKernelAttention(nn.Module):
             num_classes=num_classes,
             lmbda=kernel_regularization,
             inverse_function=inverse_function
+        )
+
+        self.model.classifier = self.kernel_attention
+
+    def forward(self, x):
+        return self.model(**x)
+
+
+class PreTrainedLLMAttentionLayerCLS(nn.Module):
+    def __init__(
+            self,
+            model_name: str,
+            num_classes: int = 10,
+            kernel_attention_num_heads: int = 1
+    ):
+        super().__init__()
+
+        self.model = AutoModelForTokenClassification.from_pretrained(
+            model_name, num_labels=num_classes,
+            finetuning_task='ner'
+        )
+
+        self.model.roberta.requires_grad_(False)
+
+        self.kernel_attention = LinearAttention(
+            embed_dim=768,
+            n_heads=kernel_attention_num_heads,
+            num_classes=num_classes
         )
 
         self.model.classifier = self.kernel_attention

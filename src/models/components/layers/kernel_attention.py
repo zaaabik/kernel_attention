@@ -1,3 +1,5 @@
+import math
+
 import torch
 import gpytorch
 
@@ -28,9 +30,39 @@ class KernelAttention(torch.nn.Module):
         input_projection = input_projection.reshape(bs, seq_len, self.n_heads, self.head_dim)
         input_projection = input_projection.permute(0, 2, 1, 3)
 
-        k = input_projection @ input_projection.T #self.kernel(input_projection, input_projection).evaluate()
+        k = self.kernel(input_projection, input_projection).evaluate()
         k_inversed = self.inverse_function(k - torch.eye(seq_len, device=x.device) * self.lmbda)
-        attention = k # @ k_inversed
+        attention = k @ k_inversed
+
+        output = attention @ input_projection
+        out_projection = self.out_projection(
+            output.reshape(bs, seq_len, self.embed_dim)
+        )
+
+        return out_projection
+
+
+class LinearAttention(torch.nn.Module):
+    def __init__(self,
+                 embed_dim: int,
+                 n_heads: int,
+                 num_classes: int,
+                 ):
+        super().__init__()
+        self.input_projection = torch.nn.Linear(embed_dim, embed_dim)
+        self.out_projection = torch.nn.Linear(embed_dim, num_classes)
+        self.n_heads = n_heads
+        self.embed_dim = embed_dim
+        self.head_dim = embed_dim // n_heads
+
+    def forward(self, x):
+        bs, seq_len, f = x.shape
+
+        input_projection = self.input_projection(x)
+        input_projection = input_projection.reshape(bs, seq_len, self.n_heads, self.head_dim)
+        input_projection = input_projection.permute(0, 2, 1, 3)
+
+        attention = torch.matmul(input_projection, input_projection.transpose(-2, -1)) / math.sqrt(f)
 
         output = attention @ input_projection
         out_projection = self.out_projection(
