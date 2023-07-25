@@ -26,4 +26,4 @@ model:
 
 logger:
   comet:
-    experiment_name: ${data.language}_NER_pretrained_bert_train_only_last_${seed}_${data.max_seq_length}
+    experiment_name: ${data.language}_NER_pretrained_bert_train_only_last_${data.max_seq_length}

@@ -30,4 +30,4 @@ model:
 
 logger:
   comet:
-    experiment_name: ${data.language}_NER_pretrained_bert_linear_attention_layer_${seed}_${data.max_seq_length}
+    experiment_name: ${data.language}_NER_pretrained_bert_linear_attention_layer_${data.max_seq_length}
