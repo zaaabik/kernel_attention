@@ -44,6 +44,29 @@ class PreTrainedLLMOnlyLastLayer(nn.Module):
         return self.model(**x)
 
 
+class PreTrainedLLMKernelAttentionIdentity(nn.Module):
+    def __init__(
+            self,
+            model_name: str,
+            num_classes: int = 10,
+            kernel_attention_num_heads: int = 1,
+            kernel_function=None,
+            kernel_regularization: float = 0.01,
+            inverse_function=None
+    ):
+        super().__init__()
+
+        self.model = AutoModelForTokenClassification.from_pretrained(
+            model_name, num_labels=num_classes,
+            finetuning_task='ner'
+        )
+
+        self.model.roberta.requires_grad_(False)
+
+    def forward(self, x):
+        return self.model(**x)
+
+
 class PreTrainedLLMKernelAttention(nn.Module):
     def __init__(
             self,
