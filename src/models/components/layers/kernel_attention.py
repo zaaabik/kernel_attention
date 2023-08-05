@@ -36,6 +36,7 @@ class KernelAttention(torch.nn.Module):
 
         q = q.reshape(bs, seq_len, self.n_heads, self.head_dim)
         q = q.permute(0, 2, 1, 3)
+        q = q / math.sqrt(f)
 
         k = k.reshape(bs, seq_len, self.n_heads, self.head_dim)
         k = k.permute(0, 2, 1, 3)
