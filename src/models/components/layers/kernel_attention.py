@@ -52,14 +52,12 @@ class KernelAttention(torch.nn.Module):
         if self.normalize_rows_by_softmax:
             attention = torch.softmax(attention, dim=-1)
 
-        output = attention @ v
-        out_projection = self.out_projection(
-            output.reshape(bs, seq_len, self.embed_dim)
-        )
+        values = attention @ v
 
-        # values = values.permute(0, 2, 1, 3)  # [Batch, SeqLen, Head, Dims]
-        # values = values.reshape(batch_size, seq_length, self.embed_dim)
+        values = values.permute(0, 2, 1, 3)  # [Batch, SeqLen, Head, Dims]
+        values = values.reshape(bs, seq_len, self.embed_dim)
 
+        out_projection = self.out_projection(values)
         return out_projection
 
 
