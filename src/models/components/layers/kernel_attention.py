@@ -18,7 +18,9 @@ class KernelAttention(torch.nn.Module):
         super().__init__()
         self.kernel = kernel_class.initialize()
         self.lmbda = torch.nn.Parameter(torch.tensor(lmbda), requires_grad=False)
-        self.input_projection = torch.nn.Linear(embed_dim, embed_dim)
+        self.w_q = torch.nn.Linear(embed_dim, embed_dim)
+        self.w_k = torch.nn.Linear(embed_dim, embed_dim)
+        self.w_v = torch.nn.Linear(embed_dim, embed_dim)
         self.out_projection = torch.nn.Linear(embed_dim, num_classes)
         self.n_heads = n_heads
         self.embed_dim = embed_dim
@@ -30,21 +32,29 @@ class KernelAttention(torch.nn.Module):
     def forward(self, x):
         bs, seq_len, f = x.shape
 
-        input_projection = self.input_projection(x)
-        input_projection = input_projection.reshape(bs, seq_len, self.n_heads, self.head_dim)
-        input_projection = input_projection.permute(0, 2, 1, 3)
+        q, k, v = self.w_q(x), self.w_k(x), self.w_v(x)
 
-        k = self.kernel(input_projection, input_projection).evaluate()
+        q = q.reshape(bs, seq_len, self.n_heads, self.head_dim)
+        q = q.permute(0, 2, 1, 3)
+
+        k = k.reshape(bs, seq_len, self.n_heads, self.head_dim)
+        k = k.permute(0, 2, 1, 3)
+
+        v = v.reshape(bs, seq_len, self.n_heads, self.head_dim)
+        v = v.permute(0, 2, 1, 3)
+
+        k = self.kernel(q, k).evaluate()
 
         if self.mul_by_inverse_matrix:
             k_inverse = self.inverse_function(k - torch.eye(seq_len, device=x.device) * self.lmbda)
             attention = k @ k_inverse
         else:
             attention = k
+
         if self.normalize_rows_by_softmax:
             attention = torch.softmax(attention, dim=-1)
 
-        output = attention @ input_projection
+        output = attention @ v
         out_projection = self.out_projection(
             output.reshape(bs, seq_len, self.embed_dim)
         )
