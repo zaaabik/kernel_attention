@@ -110,7 +110,8 @@ class PreTrainedLLMAttentionLayerCLS(nn.Module):
             num_classes: int = 10,
             kernel_attention_num_heads: int = 1,
             ff=False,
-            attention=True
+            attention=True,
+            residual=True
     ):
         super().__init__()
 
@@ -124,7 +125,7 @@ class PreTrainedLLMAttentionLayerCLS(nn.Module):
         self.kernel_attention = torch.nn.Sequential(
             EncoderBlock(input_dim=768, dim_feedforward=768 * 4,
                          num_heads=kernel_attention_num_heads, ff=ff,
-                         attention=attention),
+                         attention=attention, residual=residual),
             torch.nn.Linear(768, num_classes)
         )
 

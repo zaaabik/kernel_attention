@@ -128,7 +128,8 @@ class MultiheadAttention(torch.nn.Module):
 
 class EncoderBlock(torch.nn.Module):
 
-    def __init__(self, input_dim, num_heads, dim_feedforward, dropout=0.0, ff=True, attention=True):
+    def __init__(self, input_dim, num_heads, dim_feedforward, dropout=0.0,
+                 ff=True, attention=True, residual=True):
         """
         Inputs:
             input_dim - Dimensionality of the input
@@ -143,6 +144,8 @@ class EncoderBlock(torch.nn.Module):
             self.self_attn = MultiheadAttention(input_dim, input_dim, num_heads)
         else:
             self.self_attn = torch.nn.Identity()
+
+        self.residual = residual
 
         # Two-layer MLP
         self.ff = ff
@@ -164,12 +167,18 @@ class EncoderBlock(torch.nn.Module):
     def forward(self, x):
         # Attention part
         attn_out = self.self_attn(x)
-        x = x + self.dropout(attn_out)
+        if self.residual:
+            x = x + self.dropout(attn_out)
+        else:
+            x = self.dropout(attn_out)
         x = self.norm1(x)
 
         # MLP part
         linear_out = self.linear_net(x)
-        x = x + self.dropout(linear_out)
+        if self.residual:
+            x = x + self.dropout(linear_out)
+        else:
+            x = self.dropout(linear_out)
         x = self.norm2(x)
 
         return x
