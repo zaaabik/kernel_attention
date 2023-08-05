@@ -11,7 +11,8 @@ class KernelAttention(torch.nn.Module):
                  kernel_class: gpytorch.kernels.Kernel,
                  num_classes: int,
                  lmbda: float = 0.1,
-                 inverse_function=None
+                 inverse_function=None,
+                 mul_by_inverse_matrix=True
                  ):
         super().__init__()
         self.kernel = kernel_class.initialize()
@@ -22,6 +23,7 @@ class KernelAttention(torch.nn.Module):
         self.embed_dim = embed_dim
         self.head_dim = embed_dim // n_heads
         self.inverse_function = inverse_function
+        self.mul_by_inverse_matrix = mul_by_inverse_matrix
 
     def forward(self, x):
         bs, seq_len, f = x.shape
@@ -31,8 +33,12 @@ class KernelAttention(torch.nn.Module):
         input_projection = input_projection.permute(0, 2, 1, 3)
 
         k = self.kernel(input_projection, input_projection).evaluate()
-        k_inversed = self.inverse_function(k - torch.eye(seq_len, device=x.device) * self.lmbda)
-        attention = k @ k_inversed
+
+        if self.mul_by_inverse_matrix:
+            k_inverse = self.inverse_function(k - torch.eye(seq_len, device=x.device) * self.lmbda)
+            attention = k @ k_inverse
+        else:
+            attention = k
 
         output = attention @ input_projection
         out_projection = self.out_projection(
