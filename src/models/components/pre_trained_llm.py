@@ -76,7 +76,8 @@ class PreTrainedLLMKernelAttention(nn.Module):
             kernel_function=None,
             kernel_regularization: float = 0.01,
             inverse_function=None,
-            mul_by_inverse_matrix=True
+            mul_by_inverse_matrix=True,
+            normalize_rows_by_softmax=False
     ):
         super().__init__()
 
@@ -94,7 +95,8 @@ class PreTrainedLLMKernelAttention(nn.Module):
             num_classes=num_classes,
             lmbda=kernel_regularization,
             inverse_function=inverse_function,
-            mul_by_inverse_matrix=mul_by_inverse_matrix
+            mul_by_inverse_matrix=mul_by_inverse_matrix,
+            normalize_rows_by_softmax=normalize_rows_by_softmax
         )
 
         self.model.classifier = self.kernel_attention

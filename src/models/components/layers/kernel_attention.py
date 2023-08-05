@@ -13,7 +13,7 @@ class KernelAttention(torch.nn.Module):
                  lmbda: float = 0.1,
                  inverse_function=None,
                  mul_by_inverse_matrix=True,
-                 normalize_if_not_mult_inverse=False
+                 normalize_rows_by_softmax=False
                  ):
         super().__init__()
         self.kernel = kernel_class.initialize()
@@ -25,7 +25,7 @@ class KernelAttention(torch.nn.Module):
         self.head_dim = embed_dim // n_heads
         self.inverse_function = inverse_function
         self.mul_by_inverse_matrix = mul_by_inverse_matrix
-        self.normalize_if_not_mult_inverse = normalize_if_not_mult_inverse
+        self.normalize_rows_by_softmax = normalize_rows_by_softmax
 
     def forward(self, x):
         bs, seq_len, f = x.shape
@@ -41,8 +41,8 @@ class KernelAttention(torch.nn.Module):
             attention = k @ k_inverse
         else:
             attention = k
-            if self.normalize_if_not_mult_inverse:
-                attention = torch.softmax(attention, dim=-1)
+        if self.normalize_rows_by_softmax:
+            attention = torch.softmax(attention, dim=-1)
 
         output = attention @ input_projection
         out_projection = self.out_projection(
