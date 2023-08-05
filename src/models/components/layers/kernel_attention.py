@@ -157,7 +157,7 @@ class EncoderBlock(torch.nn.Module):
                 torch.nn.Linear(dim_feedforward, input_dim)
             )
         else:
-            self.ff = torch.nn.Identity()
+            self.linear_net = torch.nn.Identity()
 
         # Layers to apply in between the main layers
         self.norm1 = torch.nn.LayerNorm(input_dim)
