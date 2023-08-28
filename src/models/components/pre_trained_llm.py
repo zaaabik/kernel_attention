@@ -44,7 +44,7 @@ class PreTrainedLLMWithLinearAttention(nn.Module):
         )
 
         for l in range(layers):
-            self_attention_v2 = RobertaSelfAttentionLinear(cfg)
+            self_attention_v2 = RobertaSelfAttentionLinear(cfg, activation=torch.sigmoid)
             self_attention_v2.load_state_dict(
                 self.model.roberta.encoder.layer[l].attention.self.state_dict()
             )
