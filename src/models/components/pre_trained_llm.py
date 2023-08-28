@@ -4,7 +4,7 @@ from torch import nn
 from transformers import AutoModelForTokenClassification, AutoConfig
 
 from src.models.components.layers.kernel_attention import KernelAttention, EncoderBlock
-from src.models.components.layers.linear_attention import MultiHeadSelfAttentionLinear
+from src.models.components.layers.linear_attention import RobertaSelfAttentionLinear
 
 
 class PreTrainedLLM(nn.Module):
@@ -37,16 +37,18 @@ class PreTrainedLLMWithLinearAttention(nn.Module):
             finetuning_task='ner'
         )
 
+        cfg = AutoConfig.from_pretrained(model_name)
+
         layers = len(
-            self.model.distilbert.transformer.layer
+            self.model.roberta.encoder.layer
         )
-        cfg = AutoConfig.from_pretrained()
-        for layer_num in range(layers):
-            self_attention_v2 = MultiHeadSelfAttentionLinear(cfg)
+
+        for l in range(layers):
+            self_attention_v2 = RobertaSelfAttentionLinear(cfg)
             self_attention_v2.load_state_dict(
-                self.model.distilbert.transformer.layer[layer_num].attention.state_dict()
+                self.model.roberta.encoder.layer[l].attention.self.state_dict()
             )
-            self.model.distilbert.transformer.layer[layer_num].attention = self_attention_v2
+            self.model.roberta.encoder.layer[l].attention.self = self_attention_v2
 
     def forward(self, x):
         return self.model(**x)
