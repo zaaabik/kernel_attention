@@ -1,10 +1,15 @@
 import math
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Set
 
 import torch
 import torch.utils.checkpoint
 from torch import nn
 from transformers import PretrainedConfig
+
+from transformers.modeling_utils import (
+    find_pruneable_heads_and_indices,
+    prune_linear_layer,
+)
 
 
 class MultiHeadSelfAttentionLinear(nn.Module):
@@ -46,13 +51,13 @@ class MultiHeadSelfAttentionLinear(nn.Module):
         self.pruned_heads = self.pruned_heads.union(heads)
 
     def forward(
-        self,
-        query: torch.Tensor,
-        key: torch.Tensor,
-        value: torch.Tensor,
-        mask: torch.Tensor,
-        head_mask: Optional[torch.Tensor] = None,
-        output_attentions: bool = False,
+            self,
+            query: torch.Tensor,
+            key: torch.Tensor,
+            value: torch.Tensor,
+            mask: torch.Tensor,
+            head_mask: Optional[torch.Tensor] = None,
+            output_attentions: bool = False,
     ) -> Tuple[torch.Tensor, ...]:
         """
         Parameters:
