@@ -120,6 +120,8 @@ class RobertaSelfAttentionLinear(nn.Module):
         # Normalize the attention scores to probabilities.
         # attention_probs = nn.functional.softmax(attention_scores, dim=-1)
         attention_probs = self.activation(attention_scores)
+        seq_len = hidden_states.shape[1]
+        attention_probs = attention_probs / seq_len
 
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
