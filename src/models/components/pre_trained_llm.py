@@ -1,9 +1,10 @@
 import torch.nn
 from torch import nn
 
-from transformers import AutoModelForTokenClassification
+from transformers import AutoModelForTokenClassification, AutoConfig
 
 from src.models.components.layers.kernel_attention import KernelAttention, EncoderBlock
+from src.models.components.layers.linear_attention import MultiHeadSelfAttentionLinear
 
 
 class PreTrainedLLM(nn.Module):
@@ -18,6 +19,34 @@ class PreTrainedLLM(nn.Module):
             model_name, num_labels=num_classes,
             finetuning_task='ner'
         )
+
+    def forward(self, x):
+        return self.model(**x)
+
+
+class PreTrainedLLMWithLinearAttention(nn.Module):
+    def __init__(
+            self,
+            model_name: str,
+            num_classes: int = 10,
+    ):
+        super().__init__()
+
+        self.model = AutoModelForTokenClassification.from_pretrained(
+            model_name, num_labels=num_classes,
+            finetuning_task='ner'
+        )
+
+        layers = len(
+            self.model.distilbert.transformer.layer
+        )
+        cfg = AutoConfig.from_pretrained()
+        for layer_num in range(layers):
+            self_attention_v2 = MultiHeadSelfAttentionLinear(cfg)
+            self_attention_v2.load_state_dict(
+                self.model.distilbert.transformer.layer[layer_num].attention.state_dict()
+            )
+            self.model.distilbert.transformer.layer[layer_num].attention = self_attention_v2
 
     def forward(self, x):
         return self.model(**x)
